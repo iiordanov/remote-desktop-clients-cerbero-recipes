@@ -1,0 +1,26 @@
+From eb416804b64912a30e93afdb4b3409f6de7fbbe6 Mon Sep 17 00:00:00 2001
+From: iordan iordanov <iiordanov@gmail.com>
+Date: Tue, 16 Mar 2021 18:45:12 -0400
+Subject: [PATCH] Disable nasm
+
+---
+ meson.build | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index 97f76a4d8..edb987487 100644
+--- a/meson.build
++++ b/meson.build
+@@ -409,6 +409,9 @@ if host_cpu == 'x86_64'
+   endif
+ endif
+ 
++nasm = disabler()
++have_nasm = false
++
+ # Disable compiler warnings for unused variables and args if gst debug system is disabled
+ if gst_dep.type_name() == 'internal'
+   gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')
+-- 
+2.24.1 (Apple Git-126)
+
