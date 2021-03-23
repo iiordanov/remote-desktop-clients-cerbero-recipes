@@ -1,17 +1,21 @@
 # -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
-
+import os
+import shutil
 
 class Recipe(recipe.Recipe):
     name = 'spice-protocol'
-    version = '0.12.15'
+    version = '0.14.3'
     # either LGPLv2.1 or MPLv1.1
     licenses = [License.LGPLv2_1Plus]
+    btype = BuildType.MESON
     remotes = {'origin': 'https://gitlab.freedesktop.org/spice/spice-protocol.git'}
     commit = 'v%s' % version
-    autoreconf = True
-    autoreconf_sh = 'NOCONFIGURE=1 ./autogen.sh'
-    configure_tpl = './configure --prefix=%(prefix)s --datarootdir=%(prefix)s/lib %(options)s '
 
     files_devel = ['include/spice-1',
                    'lib/pkgconfig/spice-protocol.pc']
 
+    def post_install (self):
+        source = os.path.join(self.config.prefix, "share/pkgconfig/spice-protocol.pc")
+        destination = os.path.join(self.config.prefix, "lib/pkgconfig/spice-protocol.pc")
+        shutil.move(source, destination)
+        super().post_install()

@@ -2,14 +2,13 @@
 
 class Recipe(recipe.Recipe):
     name = 'spice-gtk'
-    version = '0.37'
+    version = '0.39'
+    btype = BuildType.MESON
     remotes = {'origin': 'https://gitlab.freedesktop.org/spice/spice-gtk.git'}
     commit = 'v%s' % version
     # either LGPLv2.1 or MPLv1.1
     licenses = [License.LGPLv2_1Plus]
-    autoreconf = True 
-    autoreconf_sh = 'NOCONFIGURE=1 ./autogen.sh && sed -i s/tests// subprojects/spice-common/Makefile.*'
-    make_check = None
+    meson_options = {}
 
     deps = ['json-glib', 'glib', 'libpng', 'zlib', 'pixman', 'fontconfig', 'freetype', 'gtk-doc-lite',
             'gstreamer-1.0', 'gst-plugins-base-1.0', 'gst-plugins-good-1.0',
@@ -26,29 +25,34 @@ class Recipe(recipe.Recipe):
     files_libs = ['libspice-client-glib-2.0']
 
     def prepare(self):
-        self.configure_options += ' --disable-werror --disable-smartcard'
-        self.configure_options += ' --disable-vala --disable-controller'
-        self.configure_options += ' --disable-pulse'
+        self.meson_options['tests'] = 'disabled'
+        self.meson_options['smartcard'] = 'disabled'
+        self.meson_options['vapi'] = 'disabled'
+        self.meson_options['pulse'] = 'disabled'
+        self.meson_options['gtk_doc'] = 'disabled'
 
         if self.config.target_platform in [Platform.IOS, 
-                                          Platform.ANDROID]:
-            self.configure_options += ' --enable-static --with-gtk=no --with-coroutine=gthread '
+                                           Platform.ANDROID]:
+            self.meson_options['gtk_doc'] = 'disabled'
+            self.meson_options['coroutine'] = 'gthread'
             self.patches = ['spice-gtk/0003-Remove-missing-symbols-from-export-files.patch']
         if self.config.target_platform == Platform.DARWIN:
-            self.configure_options += ' --with-coroutine=gthread --disable-introspection CPPFLAGS=" -xobjective-c"'
+            self.meson_options['coroutine'] = 'gthread'
+            self.meson_options['introspection'] = 'disabled'
+            self.append_env('CPPFLAGS', '-xobjective-c')
         elif self.config.target_platform == Platform.WINDOWS:
-            self.configure_options += ' --enable-tools' # Build spicy for Windows Dashboard
-            self.configure_options += ' --enable-usbredir --with-usb-ids-path=./usb.ids'
+            self.meson_options['usbredir'] = 'enabled'
             if self.config.target_arch == Architecture.X86:
                 host = 'i686-w64-mingw32'
             else:
                 host = 'x86_64-w64-mingw32'
             directx_headers = os.path.join(self.config.toolchain_prefix, host, 'include', 'directx')
-            self.configure_options += ' CPPFLAGS=" -I' + directx_headers + ' -DWIN32_LEAN_AND_MEAN ${CPPFLAGS}"'
-            self.configure_options += ' LIBS=" -limm32"'
+            self.append_env('CPPFLAGS', ' -I' + directx_headers + ' -DWIN32_LEAN_AND_MEAN ${CPPFLAGS}')
+            self.append_env('LIBS', ' -limm32 ${LIBS}')
         elif self.config.target_platform == Platform.LINUX:
             self.use_system_libs = True
-            self.configure_options += ' --enable-usbredir --with-usb-ids-path=./usb.ids'
+            self.meson_options['usbredir'] = 'enabled'
+            self.meson_options['usb-ids-path'] = './usb.ids'
 
     def post_install(self):
         if self.config.target_platform in [Platform.WINDOWS, Platform.LINUX]:

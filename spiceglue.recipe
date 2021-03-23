@@ -22,10 +22,16 @@ class Recipe(recipe.Recipe):
 
 
     def prepare(self):
+        ldflags = self.get_env('LDFLAGS')
+        if not ldflags:
+            ldflags = ""
+
         if self.config.target_platform != Platform.WINDOWS:
             self.configure_options += ' --disable-printing --disable-usbredir'
             if self.config.target_platform != Platform.DARWIN:
                 self.configure_options += ' --disable-clipboard'
+            if self.config.target_platform == Platform.ANDROID:
+                self.append_env('LDFLAGS', ldflags + ' -lm -llog')
         else:
             self.append_env['CFLAGS'] = ' -O2 -fPIC'
 
