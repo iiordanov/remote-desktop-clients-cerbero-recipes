@@ -35,7 +35,9 @@ class Recipe(recipe.Recipe):
                                            Platform.ANDROID]:
             self.meson_options['gtk_doc'] = 'disabled'
             self.meson_options['coroutine'] = 'gthread'
-            self.patches = ['spice-gtk/0003-Remove-missing-symbols-from-export-files.patch']
+            self.patches = ['spice-gtk/0001-Disable-sync-of-audio-playback-and-record-volume.patch',
+                            'spice-gtk/0002-Disable-notify-volume-and-notify-mute-for-playback-a.patch',
+                            'spice-gtk/0003-Remove-missing-symbols-from-export-files.patch']
         if self.config.target_platform == Platform.DARWIN:
             self.meson_options['coroutine'] = 'gthread'
             self.meson_options['introspection'] = 'disabled'
