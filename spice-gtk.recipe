@@ -25,7 +25,8 @@ class Recipe(recipe.Recipe):
     files_libs = ['libspice-client-glib-2.0']
 
     def prepare(self):
-        self.meson_options['tests'] = 'disabled'
+        self.meson_options['tests'] = 'false'
+        self.meson_options['spice-common:tests'] = 'false'
         self.meson_options['smartcard'] = 'disabled'
         self.meson_options['vapi'] = 'disabled'
         self.meson_options['pulse'] = 'disabled'
