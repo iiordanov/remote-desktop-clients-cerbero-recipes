@@ -1,0 +1,27 @@
+class Recipe(recipe.Recipe):
+    name = 'liblz4'
+    version = '1.9.3'
+    licenses = [License.LGPLv2_1Plus]
+
+    remotes = {'origin': 'https://github.com/lz4/lz4.git'}
+    commit = 'v' + version
+
+    files_libs = ['liblz4']
+    files_devel = ['include']
+
+    config_sh = 'make #'
+    make_install = 'make install'
+
+    def prepare(self):
+        ldflags = self.get_env('LDFLAGS')
+        if not ldflags:
+            ldflags = ""
+        cflags = self.get_env('CFLAGS')
+        if not cflags:
+            cflags = ""
+  
+        if self.config.target_platform == Platform.DARWIN:
+            self.append_env('LDFLAGS', ldflags + ' -fembed-bitcode=off')
+            self.append_env('CFLAGS', cflags + ' -fembed-bitcode=off')
+
+        self.append_env('PREFIX', self.config.prefix)

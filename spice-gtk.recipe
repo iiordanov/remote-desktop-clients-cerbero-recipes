@@ -12,7 +12,7 @@ class Recipe(recipe.Recipe):
 
     deps = ['json-glib', 'glib', 'libpng', 'zlib', 'pixman', 'fontconfig', 'freetype', 'gtk-doc-lite',
             'gstreamer-1.0', 'gst-plugins-base-1.0', 'gst-plugins-good-1.0',
-            'spice-protocol', 'libjpeg8', 'opus', 'six', 'openssl']
+            'spice-protocol', 'libjpeg8', 'opus', 'six', 'openssl', 'liblz4']
     platform_deps = {
             Platform.WINDOWS: [ 'gtk+3', 'usbredir', 'phodav' ],
             Platform.LINUX: [ 'gtk+3', 'usbredir', 'phodav' ],
@@ -31,6 +31,9 @@ class Recipe(recipe.Recipe):
         self.meson_options['vapi'] = 'disabled'
         self.meson_options['pulse'] = 'disabled'
         self.meson_options['gtk_doc'] = 'disabled'
+        self.meson_options['builtin-mjpeg'] = 'true'
+        self.meson_options['lz4'] = 'enabled'
+        self.meson_options['opus'] = 'enabled'
 
         if self.config.target_platform in [Platform.IOS, 
                                            Platform.ANDROID]:
