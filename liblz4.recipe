@@ -20,7 +20,8 @@ class Recipe(recipe.Recipe):
         if not cflags:
             cflags = ""
   
-        if self.config.target_platform == Platform.DARWIN:
+        if self.config.target_platform == Platform.DARWIN or \
+           self.config.target_platform == Platform.IOS:
             self.append_env('LDFLAGS', ldflags + ' -fembed-bitcode=off')
             self.append_env('CFLAGS', cflags + ' -fembed-bitcode=off')
 
