@@ -19,10 +19,16 @@ class Recipe(recipe.Recipe):
         cflags = self.get_env('CFLAGS')
         if not cflags:
             cflags = ""
+        cppflags = self.get_env('CPPLAGS')
+        if not cppflags:
+            cppflags = ""
   
         if self.config.target_platform == Platform.DARWIN or \
            self.config.target_platform == Platform.IOS:
             self.append_env('LDFLAGS', ldflags + ' -fembed-bitcode=off')
             self.append_env('CFLAGS', cflags + ' -fembed-bitcode=off')
+
+        if self.config.target_platform == Platform.ANDROID:
+            self.append_env('CPPFLAGS', cppflags + ' ' + cflags)
 
         self.append_env('PREFIX', self.config.prefix)
