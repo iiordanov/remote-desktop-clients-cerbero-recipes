@@ -13,7 +13,7 @@ class Recipe(recipe.Recipe):
     config_sh = './configure'
 
     licenses = [License.LGPLv2_1Plus]
-    deps = ['spice-protocol', 'spice-gtk', 'libiconv']
+    deps = ['spice-protocol', 'spice-gtk', 'libiconv', 'libxml2']
     platform_deps = {
             Platform.WINDOWS: ['flexvdi-spice-client', 'libusb', 'usbredir'],
             Platform.DARWIN: ['gst-plugins-base-1.0-static', 
