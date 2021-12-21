@@ -1,0 +1,17 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+
+class Recipe(recipe.Recipe):
+    name = 'libusb-1.0'
+    version = '80535f0fa6c18f0420bd1716dfd6bcfdd34e2869'
+    config_sh = 'autoreconf -fi && sh ./configure --disable-udev'
+    remotes = {'origin': 'https://github.com/iiordanov/libusb.git'}
+    commit = '%s' % version
+    # either LGPLv2.1 or MPLv1.1
+    licenses = [License.LGPLv2_1Plus]
+
+    deps = []
+    files_devel = []
+    files_libs = []
+
+    def prepare(self):
+        pass

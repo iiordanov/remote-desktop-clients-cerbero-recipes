@@ -12,7 +12,7 @@ class Recipe(recipe.Recipe):
 
     deps = ['json-glib', 'glib', 'libpng', 'zlib', 'pixman', 'fontconfig', 'freetype', 'gtk-doc-lite',
             'gstreamer-1.0', 'gst-plugins-base-1.0', 'gst-plugins-good-1.0',
-            'spice-protocol', 'libjpeg8', 'opus', 'six', 'openssl', 'liblz4']
+            'spice-protocol', 'libjpeg8', 'opus', 'six', 'openssl', 'liblz4', 'spice-usbredir']
     platform_deps = {
             Platform.WINDOWS: [ 'gtk+3', 'usbredir', 'phodav' ],
             Platform.LINUX: [ 'gtk+3', 'usbredir', 'phodav' ],
@@ -37,9 +37,11 @@ class Recipe(recipe.Recipe):
 
         if self.config.target_platform in [Platform.IOS, 
                                            Platform.ANDROID]:
+            self.meson_options['usbredir'] = 'enabled'
             self.meson_options['gtk_doc'] = 'disabled'
             self.meson_options['coroutine'] = 'gthread'
             self.patches = ['spice-gtk/0001-Disable-sync-of-audio-playback-and-record-volume.patch',
+                            'spice-gtk/0001-Include-endian.h-to-fix-build-with-USB-redirection-o.patch',
                             'spice-gtk/0002-Disable-notify-volume-and-notify-mute-for-playback-a.patch',
                             'spice-gtk/0003-Remove-missing-symbols-from-export-files.patch']
         if self.config.target_platform == Platform.DARWIN:

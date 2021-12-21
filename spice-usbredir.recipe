@@ -1,0 +1,20 @@
+# -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+
+class Recipe(recipe.Recipe):
+    name = 'spice-usbredir'
+    version = 'usbredir-0.12.0'
+    btype = BuildType.MESON
+    remotes = {'origin': 'https://github.com/freedesktop/spice-usbredir.git'}
+    commit = '%s' % version
+    # either LGPLv2.1 or MPLv1.1
+    licenses = [License.LGPLv2_1Plus]
+    meson_options = {}
+
+    deps = ['libusb-1.0']
+    files_devel = []
+    files_libs = []
+
+    def prepare(self):
+        self.meson_options['tests'] = 'disabled'
+        self.meson_options['git_werror'] = 'disabled'
+

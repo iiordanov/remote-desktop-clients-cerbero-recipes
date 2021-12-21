@@ -1,0 +1,37 @@
+From aa9fbed374227b71070b2f62d980287f4d0cba45 Mon Sep 17 00:00:00 2001
+From: Iordan Iordanov <iiordanov@gmail.com>
+Date: Mon, 20 Dec 2021 20:14:12 -0500
+Subject: [PATCH] Include endian.h to fix build with USB redirection on armv7
+
+---
+ src/cd-scsi.c         | 1 +
+ src/cd-usb-bulk-msd.c | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/src/cd-scsi.c b/src/cd-scsi.c
+index a782670..4c50ebf 100644
+--- a/src/cd-scsi.c
++++ b/src/cd-scsi.c
+@@ -25,6 +25,7 @@
+ #include "spice-common.h"
+ #include "spice-util.h"
+ #include "cd-scsi.h"
++#include "endian.h"
+ 
+ #ifdef USE_USBREDIR
+ 
+diff --git a/src/cd-usb-bulk-msd.c b/src/cd-usb-bulk-msd.c
+index cc4db2b..353094f 100644
+--- a/src/cd-usb-bulk-msd.c
++++ b/src/cd-usb-bulk-msd.c
+@@ -26,6 +26,7 @@
+ #include "spice-util.h"
+ #include "cd-usb-bulk-msd.h"
+ #include "cd-scsi.h"
++#include "endian.h"
+ 
+ #ifdef USE_USBREDIR
+ 
+-- 
+2.25.1
+
