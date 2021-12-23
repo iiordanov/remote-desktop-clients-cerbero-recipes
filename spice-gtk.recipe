@@ -41,9 +41,10 @@ class Recipe(recipe.Recipe):
             self.meson_options['gtk_doc'] = 'disabled'
             self.meson_options['coroutine'] = 'gthread'
             self.patches = ['spice-gtk/0001-Disable-sync-of-audio-playback-and-record-volume.patch',
-                            'spice-gtk/0001-Include-endian.h-to-fix-build-with-USB-redirection-o.patch',
-                            'spice-gtk/0002-Disable-notify-volume-and-notify-mute-for-playback-a.patch',
-                            'spice-gtk/0003-Remove-missing-symbols-from-export-files.patch']
+                            'spice-gtk/0002-Disable-gstaudio-record-channel.patch',
+                            'spice-gtk/0003-Disable-notify-volume-and-notify-mute-for-playback-a.patch',
+                            'spice-gtk/0004-Include-endian.h-to-fix-build-with-USB-redirection-o.patch',
+                            'spice-gtk/0005-Implemented-the-ability-to-attach-USB-devices-by-ope.patch']
         if self.config.target_platform == Platform.DARWIN:
             self.meson_options['coroutine'] = 'gthread'
             self.meson_options['introspection'] = 'disabled'

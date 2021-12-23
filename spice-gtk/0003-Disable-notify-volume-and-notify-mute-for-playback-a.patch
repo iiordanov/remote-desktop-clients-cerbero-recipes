@@ -1,7 +1,7 @@
-From e5fe929df81b21d525323dde04d8db837c3be2e2 Mon Sep 17 00:00:00 2001
+From 69086befd554f8bb7089c7a2cb6f2ef1ce701c74 Mon Sep 17 00:00:00 2001
 From: Iordan Iordanov <iiordanov@gmail.com>
 Date: Wed, 24 Mar 2021 19:10:02 -0400
-Subject: [PATCH 3/3] Disable notify volume and notify mute for playback and
+Subject: [PATCH 3/5] Disable notify volume and notify mute for playback and
  record
 
 ---
@@ -9,10 +9,10 @@ Subject: [PATCH 3/3] Disable notify volume and notify mute for playback and
  1 file changed, 8 insertions(+), 8 deletions(-)
 
 diff --git a/src/spice-gstaudio.c b/src/spice-gstaudio.c
-index 38e3d73..caf5217 100644
+index e472baf..fea057b 100644
 --- a/src/spice-gstaudio.c
 +++ b/src/spice-gstaudio.c
-@@ -520,10 +520,10 @@ static gboolean connect_channel(SpiceAudio *audio, SpiceChannel *channel)
+@@ -529,10 +529,10 @@ static gboolean connect_channel(SpiceAudio *audio, SpiceChannel *channel)
                                        G_CALLBACK(playback_data), gstaudio, 0);
          spice_g_signal_connect_object(channel, "playback-stop",
                                        G_CALLBACK(playback_stop), gstaudio, G_CONNECT_SWAPPED);
@@ -27,7 +27,7 @@ index 38e3d73..caf5217 100644
  
          return TRUE;
      }
-@@ -538,10 +538,10 @@ static gboolean connect_channel(SpiceAudio *audio, SpiceChannel *channel)
+@@ -547,10 +547,10 @@ static gboolean connect_channel(SpiceAudio *audio, SpiceChannel *channel)
                                        G_CALLBACK(record_start), gstaudio, 0);
          spice_g_signal_connect_object(channel, "record-stop",
                                        G_CALLBACK(record_stop), gstaudio, G_CONNECT_SWAPPED);
@@ -43,5 +43,5 @@ index 38e3d73..caf5217 100644
          return TRUE;
      }
 -- 
-2.17.1
+2.25.1
 

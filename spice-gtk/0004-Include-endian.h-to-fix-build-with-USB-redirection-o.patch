@@ -1,7 +1,8 @@
 From aa9fbed374227b71070b2f62d980287f4d0cba45 Mon Sep 17 00:00:00 2001
 From: Iordan Iordanov <iiordanov@gmail.com>
 Date: Mon, 20 Dec 2021 20:14:12 -0500
-Subject: [PATCH] Include endian.h to fix build with USB redirection on armv7
+Subject: [PATCH 4/5] Include endian.h to fix build with USB redirection on
+ armv7
 
 ---
  src/cd-scsi.c         | 1 +

@@ -1,14 +1,14 @@
-From 2fed7b5d0d4f010d8999facb0703f3ad25816ff7 Mon Sep 17 00:00:00 2001
+From 1a172b406add619802db67b04f3cab5cd6d39591 Mon Sep 17 00:00:00 2001
 From: Iordan Iordanov <iiordanov@gmail.com>
 Date: Tue, 23 Mar 2021 15:35:32 -0400
-Subject: [PATCH] Disable sync of audio playback and record volume
+Subject: [PATCH 1/5] Disable sync of audio playback and record volume
 
 ---
  src/channel-main.c | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/src/channel-main.c b/src/channel-main.c
-index 060b70c..fc8a0a6 100644
+index 7f71258..a94bddc 100644
 --- a/src/channel-main.c
 +++ b/src/channel-main.c
 @@ -2089,8 +2089,8 @@ static void main_agent_handle_msg(SpiceChannel *channel,
@@ -23,5 +23,5 @@ index 060b70c..fc8a0a6 100644
          agent_max_clipboard(self);
  
 -- 
-2.17.1
+2.25.1
 

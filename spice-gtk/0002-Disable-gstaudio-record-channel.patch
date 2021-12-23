@@ -1,0 +1,24 @@
+From 23f3f32f379e3084007b52e97bc62c4a64fcd9e6 Mon Sep 17 00:00:00 2001
+From: Iordan Iordanov <iiordanov@gmail.com>
+Date: Tue, 23 Mar 2021 18:03:10 -0400
+Subject: [PATCH 2/5] Disable-gstaudio-record-channel.
+
+---
+ src/spice-gstaudio.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/spice-gstaudio.c b/src/spice-gstaudio.c
+index d67727f..e472baf 100644
+--- a/src/spice-gstaudio.c
++++ b/src/spice-gstaudio.c
+@@ -538,6 +538,7 @@ static gboolean connect_channel(SpiceAudio *audio, SpiceChannel *channel)
+     }
+ 
+     if (SPICE_IS_RECORD_CHANNEL(channel)) {
++        return FALSE;
+         g_return_val_if_fail(p->rchannel == NULL, FALSE);
+ 
+         p->rchannel = channel;
+-- 
+2.25.1
+
