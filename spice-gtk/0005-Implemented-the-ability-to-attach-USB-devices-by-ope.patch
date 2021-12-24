@@ -1,23 +1,67 @@
-From 0838352d3aa03acf2caa3d7f4f921d6ea6ea6eff Mon Sep 17 00:00:00 2001
+From 5b899dbf57e9e7e6a014dfb17506c53e34f31771 Mon Sep 17 00:00:00 2001
 From: Iordan Iordanov <iiordanov@gmail.com>
-Date: Tue, 21 Dec 2021 11:09:40 -0500
-Subject: [PATCH 5/5] Implemented the ability to attach USB devices by open
- file descriptor to support modern Android USB device permissioning scheme.
+Date: Thu, 23 Dec 2021 21:17:45 -0500
+Subject: [PATCH] Implemented the ability to allocate SpiceUsbDevice instances
+ by passing an open file descriptor in order to support the modern Android USB
+ device permissioning scheme.
 
-On Android, set option LIBUSB_OPTION_NO_DEVICE_DISCOVERY prior to libusb_init()
-call as per libusb documentation, and skip the call to libusb_open() since
-it would not be permitted on Android.
+During the process, a handle obtained by a call to
+libusb_wrap_sys_device() is stored in the SpiceUsbDevice instance.
 
-Implemented ability to obtain SpiceUsbBackend from SpiceUsbDeviceManager.
+A call to libusb_open() is skipped if there is already a handle
+present in the SpiceUsbDevice instance.
+
+Finally, on Android, the option LIBUSB_OPTION_NO_DEVICE_DISCOVERY
+must be set prior to the call to libusb_init() as per libusb
+documentation.
 ---
- src/usb-backend.c        | 43 +++++++++++++++++++++++++++++++---------
- src/usb-backend.h        |  2 ++
- src/usb-device-manager.c | 17 ++++++++++++++++
- src/usb-device-manager.h |  4 ++++
- 4 files changed, 57 insertions(+), 9 deletions(-)
+ doc/reference/spice-gtk-sections.txt |  1 +
+ src/map-file                         |  1 +
+ src/spice-glib-sym-file              |  1 +
+ src/usb-backend.c                    | 53 +++++++++++++++++++++++-----
+ src/usb-backend.h                    |  3 ++
+ src/usb-device-manager.c             | 35 ++++++++++++++++++
+ src/usb-device-manager.h             |  5 +++
+ 7 files changed, 90 insertions(+), 9 deletions(-)
 
+diff --git a/doc/reference/spice-gtk-sections.txt b/doc/reference/spice-gtk-sections.txt
+index d5a7d58..5cd6686 100644
+--- a/doc/reference/spice-gtk-sections.txt
++++ b/doc/reference/spice-gtk-sections.txt
+@@ -358,6 +358,7 @@ spice_usb_device_manager_connect_device_finish
+ spice_usb_device_manager_disconnect_device
+ spice_usb_device_manager_disconnect_device_async
+ spice_usb_device_manager_disconnect_device_finish
++spice_usb_device_manager_allocate_device_for_file_descriptor
+ <SUBSECTION>
+ SpiceUsbDevice
+ spice_usb_device_get_description
+diff --git a/src/map-file b/src/map-file
+index 2dbb0d0..c0d8ca6 100644
+--- a/src/map-file
++++ b/src/map-file
+@@ -182,6 +182,7 @@ spice_usb_device_manager_get_devices_with_filter;
+ spice_usb_device_manager_get_type;
+ spice_usb_device_manager_is_device_connected;
+ spice_usb_device_manager_is_redirecting;
++spice_usb_device_manager_allocate_device_for_file_descriptor;
+ spice_usb_device_manager_create_shared_cd_device;
+ spice_usb_device_manager_is_device_shared_cd;
+ spice_usb_device_widget_get_type;
+diff --git a/src/spice-glib-sym-file b/src/spice-glib-sym-file
+index 2cc80aa..ccaad1a 100644
+--- a/src/spice-glib-sym-file
++++ b/src/spice-glib-sym-file
+@@ -160,6 +160,7 @@ spice_usb_device_manager_get_devices_with_filter
+ spice_usb_device_manager_get_type
+ spice_usb_device_manager_is_device_connected
+ spice_usb_device_manager_is_redirecting
++spice_usb_device_manager_allocate_device_for_file_descriptor
+ spice_usbredir_channel_get_type
+ spice_util_get_debug
+ spice_util_get_version_string
 diff --git a/src/usb-backend.c b/src/usb-backend.c
-index c76d576..6576f55 100644
+index c76d576..dab94fc 100644
 --- a/src/usb-backend.c
 +++ b/src/usb-backend.c
 @@ -49,6 +49,7 @@ struct _SpiceUsbDevice
@@ -32,9 +76,9 @@ index c76d576..6576f55 100644
      SpiceUsbBackend *be;
      SPICE_DEBUG("%s >>", __FUNCTION__);
      be = g_new0(SpiceUsbBackend, 1);
-+    #ifdef __ANDROID__
++#ifdef __ANDROID__
 +    libusb_set_option(NULL, LIBUSB_OPTION_NO_DEVICE_DISCOVERY);
-+    #endif
++#endif
      rc = libusb_init(&be->libusb_context);
      if (rc < 0) {
          const char *desc = libusb_strerror(rc);
@@ -78,63 +122,92 @@ index c76d576..6576f55 100644
  
      if (rc) {
          const char *desc = libusb_strerror(rc);
-@@ -1522,3 +1528,22 @@ spice_usb_backend_create_emulated_device(SpiceUsbBackend *be,
+@@ -1522,3 +1528,32 @@ spice_usb_backend_create_emulated_device(SpiceUsbBackend *be,
  
      return TRUE;
  }
 +
 +SpiceUsbDevice *
 +spice_usb_backend_allocate_device_for_file_descriptor(SpiceUsbBackend *be,
-+                                                      int file_descriptor)
++                                                      int file_descriptor,
++                                                      GError **err)
 +{
 +    libusb_device_handle *handle = NULL;
 +    libusb_context *ctx = be->libusb_context;
 +    if (!ctx) {
++        g_set_error_literal(err, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
++                            _("libusb backend is null"));
 +        return NULL;
 +    }
 +
 +    if (libusb_wrap_sys_device(ctx, (intptr_t)file_descriptor, &handle) < 0) {
++        g_set_error_literal(err, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
++                            _("libusb failed to create handle for specified file descriptor"));
 +        return NULL;
 +    }
 +
 +    SpiceUsbDevice *device = allocate_backend_device(libusb_get_device(handle));
-+    device->handle = handle;
++    if (!device) {
++        g_set_error_literal(err, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
++                            _("failed to allocate SpiceUsbDevice"));        
++    } else {
++        device->handle = handle;
++    }
 +    return device;
 +}
 \ No newline at end of file
 diff --git a/src/usb-backend.h b/src/usb-backend.h
-index 4dff03f..eed3ccb 100644
+index 4dff03f..3dd7dfc 100644
 --- a/src/usb-backend.h
 +++ b/src/usb-backend.h
-@@ -93,5 +93,7 @@ void spice_usb_backend_channel_get_guest_filter(SpiceUsbBackendChannel *ch,
+@@ -93,5 +93,8 @@ void spice_usb_backend_channel_get_guest_filter(SpiceUsbBackendChannel *ch,
                                                  int *count);
  void spice_usb_backend_return_write_data(SpiceUsbBackendChannel *ch, void *data);
  gchar *spice_usb_backend_device_get_description(SpiceUsbDevice *dev, const gchar *format);
 +SpiceUsbDevice *spice_usb_backend_allocate_device_for_file_descriptor(SpiceUsbBackend *be,
-+                                                                      int file_descriptor);
++                                                                      int file_descriptor,
++                                                                      GError **err);
  
  G_END_DECLS
 diff --git a/src/usb-device-manager.c b/src/usb-device-manager.c
-index 738eba5..098d406 100644
+index 738eba5..36208fc 100644
 --- a/src/usb-device-manager.c
 +++ b/src/usb-device-manager.c
-@@ -1521,6 +1521,23 @@ spice_usb_device_manager_is_device_shared_cd(SpiceUsbDeviceManager *manager,
+@@ -1521,6 +1521,41 @@ spice_usb_device_manager_is_device_shared_cd(SpiceUsbDeviceManager *manager,
  #endif
  }
  
++/**
++ * spice_usb_device_manager_allocate_device_for_file_descriptor:
++ * @manager: the #SpiceUsbDeviceManager manager.
++ * @file_descriptor: an open file descriptor for the USB device.
++ * @err: (allow-none): a return location for a #GError, or %NULL.
++ *
++ * Allocates a SpiceUsbDevice instance for the specified file descriptor.
++ *
++ * Returns: an allocated SpiceUsbDevice instance or %NULL in case of failure.
++ *
++ * Since: 0.40
++ */
 +SpiceUsbDevice *
 +spice_usb_device_manager_allocate_device_for_file_descriptor(SpiceUsbDeviceManager *manager,
-+                                                             int file_descriptor)
++                                                             int file_descriptor,
++                                                             GError **err)
 +{
 +#ifdef USE_USBREDIR
 +    SpiceUsbDeviceManagerPrivate *priv = manager->priv;
 +    if (!priv->context) {
++        g_set_error_literal(err, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
++                            _("libusb backend is null"));
 +        return NULL;
 +    }
 +
 +    return spice_usb_backend_allocate_device_for_file_descriptor(priv->context,
-+                                                                 file_descriptor);
++                                                                 file_descriptor,
++                                                                 err);
 +#else
++    g_set_error_literal(err, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
++                        _("USB redirection support not compiled in"));
 +    return NULL;
 +#endif
 +}
@@ -143,16 +216,17 @@ index 738eba5..098d406 100644
  /*
   * SpiceUsbDevice
 diff --git a/src/usb-device-manager.h b/src/usb-device-manager.h
-index 4747dd4..452cbc0 100644
+index 4747dd4..1cebeb8 100644
 --- a/src/usb-device-manager.h
 +++ b/src/usb-device-manager.h
-@@ -152,6 +152,10 @@ gboolean
+@@ -152,6 +152,11 @@ gboolean
  spice_usb_device_manager_is_device_shared_cd(SpiceUsbDeviceManager *manager,
                                               SpiceUsbDevice *device);
  
 +SpiceUsbDevice *
 +spice_usb_device_manager_allocate_device_for_file_descriptor(SpiceUsbDeviceManager *manager,
-+                                                             int file_descriptor);
++                                                             int file_descriptor,
++                                                             GError **err);
 +
  G_END_DECLS
  
