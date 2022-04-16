@@ -12,7 +12,8 @@ class Recipe(recipe.Recipe):
 
     deps = ['json-glib', 'glib', 'libpng', 'zlib', 'pixman', 'fontconfig', 'freetype', 'gtk-doc-lite',
             'gstreamer-1.0', 'gst-plugins-base-1.0', 'gst-plugins-good-1.0',
-            'spice-protocol', 'libjpeg8', 'opus', 'six', 'openssl', 'liblz4', 'spice-usbredir']
+            'spice-protocol', 'libjpeg8', 'opus', 'six', 'openssl', 'liblz4']
+
     platform_deps = {
             Platform.WINDOWS: [ 'gtk+3', 'usbredir', 'phodav' ],
             Platform.LINUX: [ 'gtk+3', 'usbredir', 'phodav' ],
@@ -25,6 +26,10 @@ class Recipe(recipe.Recipe):
     files_libs = ['libspice-client-glib-2.0']
 
     def prepare(self):
+        if self.config.target_platform in [Platform.ANDROID]:
+            self.deps += ['spice-usbredir']
+            self.meson_options['usbredir'] = 'enabled'
+
         self.meson_options['tests'] = 'false'
         self.meson_options['spice-common:tests'] = 'false'
         self.meson_options['smartcard'] = 'disabled'
@@ -37,7 +42,6 @@ class Recipe(recipe.Recipe):
 
         if self.config.target_platform in [Platform.IOS, 
                                            Platform.ANDROID]:
-            self.meson_options['usbredir'] = 'enabled'
             self.meson_options['gtk_doc'] = 'disabled'
             self.meson_options['coroutine'] = 'gthread'
             self.patches = ['spice-gtk/0001-Disable-sync-of-audio-playback-and-record-volume.patch',
