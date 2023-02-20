@@ -32,3 +32,5 @@ class Recipe(recipe.Recipe):
             self.append_env('CPPFLAGS', cppflags + ' ' + cflags)
 
         self.append_env('PREFIX', self.config.prefix)
+
+        self.patches = ['liblz4/0001-Force-symlinks-to-programs.patch']
