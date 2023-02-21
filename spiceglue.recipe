@@ -3,7 +3,7 @@ from cerbero.utils import shell
 
 class Recipe(recipe.Recipe):
     name = 'spiceglue'
-    version = '2.2'
+    version = '2.2' # Not used for build but depended on for path to headers
     commit = 'origin/master'
     remotes = {'origin': 'https://github.com/iiordanov/spiceglue'}
 
@@ -28,7 +28,7 @@ class Recipe(recipe.Recipe):
 
         if self.config.target_platform != Platform.WINDOWS:
             self.configure_options += ' --disable-printing --disable-usbredir'
-            if self.config.target_platform != Platform.DARWIN:
+            if self.config.target_platform not in [Platform.DARWIN, Platform.IOS]:
                 self.configure_options += ' --disable-clipboard'
             if self.config.target_platform == Platform.ANDROID:
                 self.append_env('LDFLAGS', ldflags + ' -lm -llog')
