@@ -14,6 +14,9 @@ class Recipe(recipe.Recipe):
     files_python = [
         'site-packages/pyparsing.py',
     ]
+    deps = [
+        'setuptools'
+    ]
 
     def install(self):
         flags = ""
@@ -24,7 +27,6 @@ class Recipe(recipe.Recipe):
                 flags = 'ARCHFLAGS="-arch i386" '
             elif self.config.target_arch == Architecture.X86_64:
                 flags = 'ARCHFLAGS="-arch x86_64" '
-        shell.call(flags + 'sed -i "s/from setuptools import setup/try:\\n    from setuptools import setup\\nexcept ImportError:\\n    from distutils.core import setup/g" %s' % self.build_dir + '/setup.py')
         shell.call(flags + 'python setup.py install --root / --prefix=%s' %
                 (self.config.prefix), self.build_dir)
 
