@@ -11,6 +11,7 @@ class Recipe(recipe.Recipe):
     deps = []
 
     tarball_name = "setuptools-%(version)s.zip"
+    tarball_checksum = 'c67aa55db532a0dadc4d2e20ba9961cbd3ccc84d544e9029699822542b5a476b'
     btype = BuildType.CUSTOM
     files_data = []
     files_bin = ['easy_install*']
