@@ -4,7 +4,7 @@ class Recipe(recipe.Recipe):
     name = 'spice-usbredir'
     version = 'usbredir-0.12.0'
     btype = BuildType.MESON
-    remotes = {'origin': 'https://github.com/freedesktop/spice-usbredir.git'}
+    remotes = {'origin': 'https://gitlab.freedesktop.org/spice/usbredir.git'}
     commit = '%s' % version
     # either LGPLv2.1 or MPLv1.1
     licenses = [License.LGPLv2_1Plus]
