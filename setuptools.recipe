@@ -7,7 +7,7 @@ class Recipe(recipe.Recipe):
     stype = SourceType.TARBALL
     url = 'https://pypi.python.org/packages/source/s/setuptools/setuptools-%(version)s.zip'
     # Python Software Foundation License
-    licenses = [License.BSD_like]
+    licenses = [License.LGPLv2Plus]
     deps = []
 
     tarball_name = "setuptools-%(version)s.zip"
