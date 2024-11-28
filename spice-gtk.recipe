@@ -1,8 +1,10 @@
 # -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
 
+import shutil
+
 class Recipe(recipe.Recipe):
     name = 'spice-gtk'
-    version = '0.39'
+    version = '0.42'
     btype = BuildType.MESON
     remotes = {'origin': 'https://gitlab.freedesktop.org/spice/spice-gtk.git'}
     commit = 'v%s' % version
@@ -12,7 +14,7 @@ class Recipe(recipe.Recipe):
 
     deps = ['json-glib', 'glib', 'libpng', 'zlib', 'pixman', 'fontconfig', 'freetype', 'gtk-doc-lite',
             'gstreamer-1.0', 'gst-plugins-base-1.0', 'gst-plugins-good-1.0',
-            'spice-protocol', 'libjpeg8', 'opus', 'pyparsing', 'six', 'openssl', 'liblz4']
+            'spice-protocol', 'libjpeg8', 'opus', 'pyparsing', 'openssl', 'liblz4']
 
     platform_deps = {
             Platform.WINDOWS: [ 'gtk+3', 'usbredir', 'phodav' ],
@@ -20,21 +22,27 @@ class Recipe(recipe.Recipe):
             Platform.DARWIN: [ 'gtk+3', 'phodav' ]
             }
 
-    files_devel = ['include/spice-client-glib-2.0',
-                   'lib/pkgconfig/spice-client-glib-2.0.pc']
+    files_devel = [
+                   'meson-private/spice-client-glib-2.0.pc',
+                   'config.h',
+                   'subprojects/spice-common/common/generated_messages.h'
+                  ]
 
     files_libs = ['libspice-client-glib-2.0']
+
+    async def configure(self):
+        shell.call('sed -i "s|python3|/usr/bin/python3|" subprojects/spice-common/meson.build', self.build_dir)
+        shell.call('grep python3 subprojects/spice-common/meson.build', self.build_dir)
+        await super().configure()
 
     def prepare(self):
         if self.config.target_platform in [Platform.ANDROID]:
             self.deps += ['spice-usbredir']
             self.meson_options['usbredir'] = 'enabled'
 
-        self.meson_options['tests'] = 'false'
         self.meson_options['spice-common:tests'] = 'false'
         self.meson_options['smartcard'] = 'disabled'
         self.meson_options['vapi'] = 'disabled'
-        self.meson_options['pulse'] = 'disabled'
         self.meson_options['gtk_doc'] = 'disabled'
         self.meson_options['builtin-mjpeg'] = 'true'
         self.meson_options['lz4'] = 'enabled'
@@ -44,11 +52,12 @@ class Recipe(recipe.Recipe):
                                            Platform.ANDROID]:
             self.meson_options['gtk_doc'] = 'disabled'
             self.meson_options['coroutine'] = 'gthread'
-            self.patches = ['spice-gtk/0001-Disable-sync-of-audio-playback-and-record-volume.patch',
+            self.patches = [
+                            'spice-gtk/0001-Disable-sync-of-audio-playback-and-record-volume.patch',
                             'spice-gtk/0002-Disable-gstaudio-record-channel.patch',
                             'spice-gtk/0003-Disable-notify-volume-and-notify-mute-for-playback-a.patch',
                             'spice-gtk/0004-Include-endian.h-to-fix-build-with-USB-redirection-o.patch',
-                            'spice-gtk/0005-Implemented-the-ability-to-attach-USB-devices-by-ope.patch']
+                           ]
         if self.config.target_platform == Platform.DARWIN:
             self.meson_options['coroutine'] = 'gthread'
             self.meson_options['introspection'] = 'disabled'
@@ -71,3 +80,16 @@ class Recipe(recipe.Recipe):
         if self.config.target_platform in [Platform.WINDOWS, Platform.LINUX]:
             shell.download("http://www.linux-usb.org/usb.ids",
                            destination=os.path.join(self.config.prefix, 'bin', 'usb.ids'))
+        # TODO: Include all the rest of the header files and directories with shutil.copytree
+        includes_dir = os.path.join(self.config.prefix, 'include', 'spice-1')
+        files = [
+                   { "src": ["subprojects", "spice-common", "common", "generated_messages.h"], "dest": ["common"], "name": "generated_messages.h" },
+                   { "src": ["config.h"], "dest": [""], "name": "config.h" }
+                ]
+        for f in files:
+            target_dir = os.path.join(includes_dir, *f["dest"])
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+            shutil.copyfile(os.path.join(self.meson_dir, *f["src"]),
+                            os.path.join(target_dir, f["name"]))
+        

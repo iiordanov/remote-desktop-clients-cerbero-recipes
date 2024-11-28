@@ -12,7 +12,7 @@ class Recipe(recipe.Recipe):
     configure_options = '--without-sasl --disable-smartcard'
     configure_tpl = './configure --prefix=%(prefix)s %(options)s '
 
-    deps = ['glib', 'pixman', 'openssl', 'opus', 'celt', 'nopoll', 'libjpeg8', 'six']
+    deps = ['glib', 'pixman', 'openssl', 'opus', 'celt', 'nopoll', 'libjpeg8']
 
     files_libs = ['libspice-server']
 
