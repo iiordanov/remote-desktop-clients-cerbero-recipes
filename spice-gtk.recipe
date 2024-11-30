@@ -31,8 +31,8 @@ class Recipe(recipe.Recipe):
     files_libs = ['libspice-client-glib-2.0']
 
     async def configure(self):
-        shell.call('sed -i "s|python3|/usr/bin/python3|" subprojects/spice-common/meson.build', self.build_dir)
-        shell.call('grep python3 subprojects/spice-common/meson.build', self.build_dir)
+        shell.call('sed -i "s|python = py_module.find_installation.*|python = py_module.find_installation(\'/usr/bin/python3\')|" subprojects/spice-common/meson.build', self.build_dir)
+        shell.call('pwd', self.build_dir)
         await super().configure()
 
     def prepare(self):
@@ -58,6 +58,9 @@ class Recipe(recipe.Recipe):
                             'spice-gtk/0003-Disable-notify-volume-and-notify-mute-for-playback-a.patch',
                             'spice-gtk/0004-Include-endian.h-to-fix-build-with-USB-redirection-o.patch',
                            ]
+            if self.version == '0.39':
+                self.patches += ['spice-gtk/0005-Implemented-the-ability-to-attach-USB-devices-by-ope.patch']
+
         if self.config.target_platform == Platform.DARWIN:
             self.meson_options['coroutine'] = 'gthread'
             self.meson_options['introspection'] = 'disabled'

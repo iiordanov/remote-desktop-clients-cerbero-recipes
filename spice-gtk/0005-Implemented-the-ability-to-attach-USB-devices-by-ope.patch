@@ -1,19 +1,8 @@
-From 5b899dbf57e9e7e6a014dfb17506c53e34f31771 Mon Sep 17 00:00:00 2001
+From 5e7dbd41a215563358cc156620c66fe20450b101 Mon Sep 17 00:00:00 2001
 From: Iordan Iordanov <iiordanov@gmail.com>
-Date: Thu, 23 Dec 2021 21:17:45 -0500
-Subject: [PATCH] Implemented the ability to allocate SpiceUsbDevice instances
- by passing an open file descriptor in order to support the modern Android USB
- device permissioning scheme.
+Date: Fri, 29 Nov 2024 13:40:15 -0500
+Subject: [PATCH] Implemented-the-ability-to-attach-USB-devices-by-ope
 
-During the process, a handle obtained by a call to
-libusb_wrap_sys_device() is stored in the SpiceUsbDevice instance.
-
-A call to libusb_open() is skipped if there is already a handle
-present in the SpiceUsbDevice instance.
-
-Finally, on Android, the option LIBUSB_OPTION_NO_DEVICE_DISCOVERY
-must be set prior to the call to libusb_init() as per libusb
-documentation.
 ---
  doc/reference/spice-gtk-sections.txt |  1 +
  src/map-file                         |  1 +
@@ -25,7 +14,7 @@ documentation.
  7 files changed, 90 insertions(+), 9 deletions(-)
 
 diff --git a/doc/reference/spice-gtk-sections.txt b/doc/reference/spice-gtk-sections.txt
-index d5a7d58..5cd6686 100644
+index 33f4038..a77aab5 100644
 --- a/doc/reference/spice-gtk-sections.txt
 +++ b/doc/reference/spice-gtk-sections.txt
 @@ -358,6 +358,7 @@ spice_usb_device_manager_connect_device_finish
@@ -37,10 +26,10 @@ index d5a7d58..5cd6686 100644
  SpiceUsbDevice
  spice_usb_device_get_description
 diff --git a/src/map-file b/src/map-file
-index 2dbb0d0..c0d8ca6 100644
+index bb85702..8720ae1 100644
 --- a/src/map-file
 +++ b/src/map-file
-@@ -182,6 +182,7 @@ spice_usb_device_manager_get_devices_with_filter;
+@@ -181,6 +181,7 @@ spice_usb_device_manager_get_devices_with_filter;
  spice_usb_device_manager_get_type;
  spice_usb_device_manager_is_device_connected;
  spice_usb_device_manager_is_redirecting;
@@ -61,7 +50,7 @@ index 2cc80aa..ccaad1a 100644
  spice_util_get_debug
  spice_util_get_version_string
 diff --git a/src/usb-backend.c b/src/usb-backend.c
-index c76d576..dab94fc 100644
+index c76d576..dab4ddd 100644
 --- a/src/usb-backend.c
 +++ b/src/usb-backend.c
 @@ -49,6 +49,7 @@ struct _SpiceUsbDevice
@@ -149,13 +138,12 @@ index c76d576..dab94fc 100644
 +    SpiceUsbDevice *device = allocate_backend_device(libusb_get_device(handle));
 +    if (!device) {
 +        g_set_error_literal(err, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
-+                            _("failed to allocate SpiceUsbDevice"));        
++                            _("failed to allocate SpiceUsbDevice"));
 +    } else {
 +        device->handle = handle;
 +    }
 +    return device;
 +}
-\ No newline at end of file
 diff --git a/src/usb-backend.h b/src/usb-backend.h
 index 4dff03f..3dd7dfc 100644
 --- a/src/usb-backend.h
@@ -170,10 +158,10 @@ index 4dff03f..3dd7dfc 100644
  
  G_END_DECLS
 diff --git a/src/usb-device-manager.c b/src/usb-device-manager.c
-index 738eba5..36208fc 100644
+index 471f134..cc1a37f 100644
 --- a/src/usb-device-manager.c
 +++ b/src/usb-device-manager.c
-@@ -1521,6 +1521,41 @@ spice_usb_device_manager_is_device_shared_cd(SpiceUsbDeviceManager *manager,
+@@ -1519,6 +1519,41 @@ spice_usb_device_manager_is_device_shared_cd(SpiceUsbDeviceManager *manager,
  #endif
  }
  
@@ -216,7 +204,7 @@ index 738eba5..36208fc 100644
  /*
   * SpiceUsbDevice
 diff --git a/src/usb-device-manager.h b/src/usb-device-manager.h
-index 4747dd4..1cebeb8 100644
+index d8d1cb8..5cd2644 100644
 --- a/src/usb-device-manager.h
 +++ b/src/usb-device-manager.h
 @@ -152,6 +152,11 @@ gboolean
