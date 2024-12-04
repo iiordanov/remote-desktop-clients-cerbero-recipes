@@ -14,7 +14,7 @@ class Recipe(recipe.Recipe):
 
     deps = ['json-glib', 'glib', 'libpng', 'zlib', 'pixman', 'fontconfig', 'freetype', 'gtk-doc-lite',
             'gstreamer-1.0', 'gst-plugins-base-1.0', 'gst-plugins-good-1.0',
-            'spice-protocol', 'libjpeg8', 'opus', 'pyparsing', 'openssl', 'liblz4']
+            'spice-protocol', 'libjpeg8', 'opus', 'openssl', 'liblz4']
 
     platform_deps = {
             Platform.WINDOWS: [ 'gtk+3', 'usbredir', 'phodav' ],
