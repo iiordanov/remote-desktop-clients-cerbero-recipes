@@ -31,7 +31,7 @@ class Recipe(recipe.Recipe):
     files_libs = ['libspice-client-glib-2.0']
 
     async def configure(self):
-        shell.call('sed -i "s|python = py_module.find_installation.*|python = py_module.find_installation(\'/usr/bin/python3\')|" subprojects/spice-common/meson.build', self.build_dir)
+        shell.call('sed -i.bak "s|python = py_module.find_installation.*|python = py_module.find_installation(\'/usr/bin/python3\')|" subprojects/spice-common/meson.build', self.build_dir)
         shell.call('pwd', self.build_dir)
         await super().configure()
 
