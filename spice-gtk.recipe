@@ -32,6 +32,8 @@ class Recipe(recipe.Recipe):
 
     async def configure(self):
         shell.call('sed -i.bak "s|python = py_module.find_installation.*|python = py_module.find_installation(\'/usr/bin/python3\')|" subprojects/spice-common/meson.build', self.build_dir)
+        if self.config.target_platform == Platform.DARWIN:
+            shell.call('sed -i.bak "s/\[.*-export-symbols.*\]/\[\]/" src/meson.build', self.build_dir)
         shell.call('pwd', self.build_dir)
         await super().configure()
 
