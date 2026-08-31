@@ -1,0 +1,30 @@
+From: aSPICE <noreply@example.com>
+Date: Sat, 25 Jan 2025 00:00:00 +0000
+Subject: [PATCH] Make USB hotplug optional on macOS
+
+libusb hotplug is not supported on macOS. Make it optional
+so USB redirection can still work with manual refresh.
+
+diff --git a/src/usb-backend.c b/src/usb-backend.c
+index 1..2 100644
+--- a/src/usb-backend.c
++++ b/src/usb-backend.c
+@@ -515,11 +515,18 @@ gboolean spice_usb_backend_register_hotplug(SpiceUsbBackend *be,
+     rc = enable_hotplug_support(be, &desc);
+ 
+     if (rc != LIBUSB_SUCCESS) {
++#ifdef __APPLE__
++        /* Hotplug is not supported on macOS, but we can still use manual polling */
++        g_warning("USB hotplug not available on macOS: %s [%i] - using manual polling", desc, rc);
++        be->hotplug_callback = NULL;
++        return TRUE;
++#else
+         g_warning("Error initializing USB hotplug support: %s [%i]", desc, rc);
+         be->hotplug_callback = NULL;
+         g_set_error(error, SPICE_CLIENT_ERROR, SPICE_CLIENT_ERROR_FAILED,
+                     _("Error on USB hotplug detection: %s [%i]"), desc, rc);
+         return FALSE;
++#endif
+     }
+ 
+     g_atomic_int_set(&be->event_thread_run, TRUE);

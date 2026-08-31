@@ -4,7 +4,7 @@ from cerbero.utils import shell
 class Recipe(recipe.Recipe):
     name = 'spiceglue'
     version = '2.2' # Not used for build but depended on for path to headers
-    commit = 'origin/master'
+    commit = '7c7ef9bdec1f56572319bc7fd2af60bcbe4afe64'
     remotes = {'origin': 'https://github.com/iiordanov/spiceglue'}
 
     autoreconf = True 
@@ -15,8 +15,9 @@ class Recipe(recipe.Recipe):
     licenses = [License.LGPLv2_1Plus]
     deps = ['spice-protocol', 'spice-gtk', 'libiconv', 'libxml2']
     platform_deps = {
-            Platform.WINDOWS: ['flexvdi-spice-client', 'libusb', 'usbredir'],
-            Platform.DARWIN: ['gst-plugins-base-1.0-static', 
+            Platform.WINDOWS: ['libusb', 'usbredir'],
+            Platform.IOS: ['libusb-1.0', 'spice-usbredir'],
+            Platform.DARWIN: ['gst-plugins-base-1.0-static',
             ]}
     files_libs = ['libspiceglue']
 
@@ -27,8 +28,8 @@ class Recipe(recipe.Recipe):
             ldflags = ""
 
         if self.config.target_platform != Platform.WINDOWS:
-            self.configure_options += ' --disable-printing --disable-usbredir'
-            if self.config.target_platform not in [Platform.DARWIN, Platform.IOS]:
+            self.configure_options += ' --disable-printing'
+            if self.config.target_platform not in [Platform.DARWIN, Platform.IOS, Platform.ANDROID]:
                 self.configure_options += ' --disable-clipboard'
             if self.config.target_platform == Platform.ANDROID:
                 self.append_env('LDFLAGS', ldflags + ' -lm -llog')
