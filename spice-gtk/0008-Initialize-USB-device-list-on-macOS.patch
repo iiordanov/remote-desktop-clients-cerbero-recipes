@@ -1,0 +1,41 @@
+From: aSPICE <noreply@example.com>
+Date: Sat, 25 Jan 2025 00:00:00 +0000
+Subject: [PATCH] Initialize USB device list on macOS without hotplug
+
+On macOS, hotplug doesn't work, but we still need to enumerate
+the initial device list and set up the event thread.
+
+diff --git a/src/usb-backend.c b/src/usb-backend.c
+index 1..2 100644
+--- a/src/usb-backend.c
++++ b/src/usb-backend.c
+@@ -517,9 +517,27 @@ gboolean spice_usb_backend_register_hotplug(SpiceUsbBackend *be,
+     if (rc != LIBUSB_SUCCESS) {
+ #ifdef __APPLE__
+         /* Hotplug is not supported on macOS, but we can still use manual polling */
+-        g_warning("USB hotplug not available on macOS: %s [%i] - using manual polling", desc, rc);
++        libusb_device **libdev_list = NULL;
++        int num_devices = libusb_get_device_list(be->libusb_context, &libdev_list);
++        
++        g_warning("USB hotplug not available on macOS: %s [%i] - found %d device(s), using manual polling", desc, rc, num_devices);
+         be->hotplug_callback = NULL;
+-        return TRUE;
++        
++        if (num_devices > 0) {
++            /* Fire device-added callbacks for all existing devices */
++            for (int i = 0; i < num_devices; i++) {
++                libusb_device *device = libdev_list[i];
++                if (device && proc) {
++                    proc(user_data, device, TRUE);
++                }
++            }
++        }
++        
++        if (libdev_list) {
++            libusb_free_device_list(libdev_list, TRUE);
++        }
++        
++        return TRUE;  /* Success despite no hotplug */
+ #else
+         g_warning("Error initializing USB hotplug support: %s [%i]", desc, rc);
+         be->hotplug_callback = NULL;

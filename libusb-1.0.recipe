@@ -2,10 +2,10 @@
 
 class Recipe(recipe.Recipe):
     name = 'libusb-1.0'
-    version = '80535f0fa6c18f0420bd1716dfd6bcfdd34e2869'
+    version = '1.0.30'
     config_sh = 'autoreconf -fi && sh ./configure --disable-udev'
     remotes = {'origin': 'https://github.com/iiordanov/libusb.git'}
-    commit = '%s' % version
+    commit = '30e6ecdf0675269d332fc2c0ec8efbf7cefab8c0'
     # either LGPLv2.1 or MPLv1.1
     licenses = [License.LGPLv2_1Plus]
 

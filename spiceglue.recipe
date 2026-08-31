@@ -1,10 +1,25 @@
 # -*- Mode: Python -*- vi:si:et:sw=4:sts=4:ts=4:syntax=python
+import os
+
+from cerbero.errors import FatalError
 from cerbero.utils import shell
+
+
+def target_is_maccatalyst(config):
+    """Whether this Platform.IOS build is the Mac Catalyst product rather than the iPhone
+    one. Both clones look identical to a recipe, so build.sh names the product."""
+    if config.target_platform != Platform.IOS:
+        return False
+    abi = os.environ.get('ASPICE_TARGET_ABI')
+    if abi not in ('maccatalyst', 'iphoneos'):
+        raise FatalError('ASPICE_TARGET_ABI must be maccatalyst or iphoneos, got %r. '
+                         'Build through aspice-lib-ios/build.sh, or set it by hand.' % abi)
+    return abi == 'maccatalyst'
 
 class Recipe(recipe.Recipe):
     name = 'spiceglue'
     version = '2.2' # Not used for build but depended on for path to headers
-    commit = 'origin/master'
+    commit = '2402a8474c55a731e7a5ff2e13c32a18cb8435e0'
     remotes = {'origin': 'https://github.com/iiordanov/spiceglue'}
 
     autoreconf = True 
@@ -15,20 +30,30 @@ class Recipe(recipe.Recipe):
     licenses = [License.LGPLv2_1Plus]
     deps = ['spice-protocol', 'spice-gtk', 'libiconv', 'libxml2']
     platform_deps = {
-            Platform.WINDOWS: ['flexvdi-spice-client', 'libusb', 'usbredir'],
-            Platform.DARWIN: ['gst-plugins-base-1.0-static', 
+            Platform.WINDOWS: ['libusb', 'usbredir'],
+            Platform.IOS: [],
+            Platform.DARWIN: ['gst-plugins-base-1.0-static',
             ]}
     files_libs = ['libspiceglue']
 
 
     def prepare(self):
+        # Both iOS clones are Platform.IOS; build.sh says which product this is. USB
+        # redirection is Mac Catalyst only here, and usb-glue.c compiles to nothing without
+        # it, so the SpiceGlibGlue_*Usb* symbols are absent from an iPhone build.
+        if self.config.target_platform == Platform.IOS:
+            if target_is_maccatalyst(self.config):
+                self.deps += ['libusb-1.0', 'spice-usbredir']
+            else:
+                self.configure_options += ' --disable-usbredir'
+
         ldflags = self.get_env('LDFLAGS')
         if not ldflags:
             ldflags = ""
 
         if self.config.target_platform != Platform.WINDOWS:
-            self.configure_options += ' --disable-printing --disable-usbredir'
-            if self.config.target_platform not in [Platform.DARWIN, Platform.IOS]:
+            self.configure_options += ' --disable-printing'
+            if self.config.target_platform not in [Platform.DARWIN, Platform.IOS, Platform.ANDROID]:
                 self.configure_options += ' --disable-clipboard'
             if self.config.target_platform == Platform.ANDROID:
                 self.append_env('LDFLAGS', ldflags + ' -lm -llog')
